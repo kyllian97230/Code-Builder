@@ -9,6 +9,8 @@
   panel.innerHTML = `
     <h3>Twitter Page Helper</h3>
     <div class="tph-buttons">
+      <button data-action="detect-likes">Détecter les boutons Like du post + commentaires</button>
+      <button data-action="trigger-likes">Déclencher tous les Like détectés (1 par 1)</button>
       <button data-action="count">Compter les posts visibles</button>
       <button data-action="copy-latest">Copier le dernier post</button>
       <button data-action="highlight">Surligner les posts avec hashtags</button>
@@ -31,6 +33,8 @@
     }
   }
 
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   async function copyLatestTweet() {
     const tweets = getTweetTextNodes();
     const latest = tweets.at(0);
@@ -98,6 +102,8 @@
         return;
       }
 
+      expanders.forEach((button) => button.click());
+      await sleep(600);
       expanders.forEach((button) => {
         button.click();
       });
@@ -111,6 +117,21 @@
     return primaryColumn || document;
   }
 
+  function isLikeButton(button) {
+    const testId = button.getAttribute("data-testid") || "";
+    const ariaLabel = (button.getAttribute("aria-label") || "").toLowerCase();
+
+    if (testId === "like") {
+      return true;
+    }
+
+    if (testId === "unlike") {
+      return false;
+    }
+
+    return (ariaLabel.includes("like") || ariaLabel.includes("j’aime")) && !ariaLabel.includes("unlike");
+  }
+
   function getLikeButtons(root) {
     const selector = [
       'button[data-testid="like"]',
@@ -119,6 +140,12 @@
       'button[aria-label*="Like"]'
     ].join(",");
 
+    return Array.from(root.querySelectorAll(selector)).filter((button) => isLikeButton(button));
+  }
+
+  async function scanThreadLikeButtons() {
+    document.querySelectorAll(".tph-like-detected").forEach((node) => node.classList.remove("tph-like-detected"));
+    document.querySelectorAll(".tph-like-clicked").forEach((node) => node.classList.remove("tph-like-clicked"));
     return Array.from(root.querySelectorAll(selector));
   }
 
@@ -131,6 +158,11 @@
     const threadArticles = Array.from(root.querySelectorAll("article"));
 
     if (threadArticles.length === 0) {
+      return {
+        ok: false,
+        message: "Aucune publication détectée. Ouvre un post (URL /status/...) puis réessaie.",
+        likeButtons: []
+      };
       const message = "Aucune publication détectée. Ouvre un post (URL /status/...) puis réessaie.";
       setStatus(message);
       return { ok: false, message };
@@ -139,6 +171,14 @@
     let totalLikeButtons = 0;
     let publicationLikeButtons = 0;
     let commentsLikeButtons = 0;
+    const likeButtons = [];
+
+    threadArticles.forEach((article, index) => {
+      const likes = getLikeButtons(article);
+      likes.forEach((button) => {
+        button.classList.add("tph-like-detected");
+        likeButtons.push(button);
+      });
 
     threadArticles.forEach((article, index) => {
       const likes = getLikeButtons(article);
@@ -160,6 +200,57 @@
       totalLikeButtons,
       publicationLikeButtons,
       commentsLikeButtons,
+      articlesScanned: threadArticles.length,
+      likeButtons
+    };
+  }
+
+  async function detectLikeButtonsInPublication() {
+    const result = await scanThreadLikeButtons();
+
+    if (!result.ok) {
+      setStatus(result.message);
+      return result;
+    }
+
+    const message = `Likes détectés: total ${result.totalLikeButtons} (post ${result.publicationLikeButtons}, commentaires ${result.commentsLikeButtons}).`;
+    setStatus(message);
+
+    return result;
+  }
+
+  async function triggerAllDetectedLikeButtons() {
+    const result = await scanThreadLikeButtons();
+
+    if (!result.ok) {
+      setStatus(result.message);
+      return result;
+    }
+
+    let clicked = 0;
+
+    for (const likeButton of result.likeButtons) {
+      if (!(likeButton instanceof HTMLElement) || !document.contains(likeButton)) {
+        continue;
+      }
+
+      likeButton.scrollIntoView({ behavior: "smooth", block: "center" });
+      likeButton.click();
+      likeButton.classList.remove("tph-like-detected");
+      likeButton.classList.add("tph-like-clicked");
+      clicked += 1;
+      await sleep(350);
+    }
+
+    const message = `Likes déclenchés un par un: ${clicked}.`;
+    setStatus(message);
+
+    return {
+      ok: true,
+      clicked,
+      totalLikeButtons: result.totalLikeButtons,
+      publicationLikeButtons: result.publicationLikeButtons,
+      commentsLikeButtons: result.commentsLikeButtons
       articlesScanned: threadArticles.length
     };
   }
@@ -172,6 +263,10 @@
 
     const action = target.dataset.action;
 
+    if (action === "detect-likes") {
+      detectLikeButtonsInPublication();
+    } else if (action === "trigger-likes") {
+      triggerAllDetectedLikeButtons();
     if (action === "count") {
       countVisibleTweets();
     } else if (action === "copy-latest") {
@@ -188,6 +283,19 @@
       return;
     }
 
+    if (request.type === "TPH_DETECT_LIKES") {
+      detectLikeButtonsInPublication().then((result) => {
+        const { likeButtons: _likeButtons, ...response } = result;
+        sendResponse(response);
+      });
+      return true;
+    }
+
+    if (request.type === "TPH_TRIGGER_ALL_LIKES") {
+      triggerAllDetectedLikeButtons().then((result) => {
+        const { likeButtons: _likeButtons, ...response } = result;
+        sendResponse(response);
+      });
     if (request.type === "TPH_COUNT") {
       const count = getTweetTextNodes().length;
       setStatus(`${count} post(s) visible(s).`);

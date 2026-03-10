@@ -22,6 +22,36 @@ async function getCurrentTwitterTab() {
   return tab;
 }
 
+async function injectContentScript(tabId) {
+  await chrome.scripting.insertCSS({
+    target: { tabId },
+    files: ["content.css"]
+  });
+
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ["content.js"]
+  });
+}
+
+async function sendToContentScript(type) {
+  const tab = await getCurrentTwitterTab();
+
+  try {
+    return await chrome.tabs.sendMessage(tab.id, { type });
+  } catch (error) {
+    const message = error?.message || "";
+    const isConnectionError =
+      message.includes("Receiving end does not exist") || message.includes("Could not establish connection");
+
+    if (!isConnectionError) {
+      throw error;
+    }
+
+    await injectContentScript(tab.id);
+    return chrome.tabs.sendMessage(tab.id, { type });
+  }
+}
 async function sendToContentScript(type) {
   const tab = await getCurrentTwitterTab();
   return chrome.tabs.sendMessage(tab.id, { type });
@@ -65,6 +95,20 @@ document.getElementById("detectLikesBtn")?.addEventListener("click", async () =>
     setResult(
       `Likes détectés: ${response.totalLikeButtons} (post ${response.publicationLikeButtons}, commentaires ${response.commentsLikeButtons}).`
     );
+  } catch (error) {
+    setResult(error.message);
+  }
+});
+
+document.getElementById("triggerLikesBtn")?.addEventListener("click", async () => {
+  try {
+    const response = await sendToContentScript("TPH_TRIGGER_ALL_LIKES");
+    if (!response?.ok) {
+      setResult(response?.message || "Impossible de déclencher les Like.");
+      return;
+    }
+
+    setResult(`Likes déclenchés un par un: ${response.clicked}.`);
   } catch (error) {
     setResult(error.message);
   }

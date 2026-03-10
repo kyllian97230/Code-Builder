@@ -1,5 +1,13 @@
 # Twitter Page Helper (extension Chrome)
 
+Extension Chrome (Manifest V3) orientée détection et déclenchement des boutons Like sur Twitter/X.
+
+## Fonctionnalités
+
+- Détecter tous les boutons **Like** d'une publication ouverte (`/status/...`) et de ses commentaires.
+- Déclencher les boutons Like détectés **un par un** automatiquement.
+- Tenter d'ouvrir les blocs de réponses masquées avant la détection (quand Twitter/X expose un bouton "voir plus").
+- Réinjection automatique du content script si le popup est ouvert sur un onglet déjà chargé (corrige l'erreur "Receiving end does not exist").
 Extension Chrome (Manifest V3) pour interagir rapidement avec la page Twitter/X.
 
 ## Fonctionnalités
@@ -25,6 +33,8 @@ Extension Chrome (Manifest V3) pour interagir rapidement avec la page Twitter/X.
 1. Ouvre `https://twitter.com` ou `https://x.com`.
 2. Va sur une publication précise (URL contenant `/status/`) pour la détection des likes.
 3. Clique l'icône de l'extension.
+4. Clique **Détecter les Like du post + commentaires**.
+5. Clique **Déclencher tous les Like détectés (1 par 1)** pour lancer les clics.
 4. Utilise les boutons du popup, ou le panneau flottant en bas à droite de la page.
 
 ## Limite importante
