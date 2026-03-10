@@ -22,35 +22,9 @@ async function getCurrentTwitterTab() {
   return tab;
 }
 
-async function injectContentScript(tabId) {
-  await chrome.scripting.insertCSS({
-    target: { tabId },
-    files: ["content.css"]
-  });
-
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    files: ["content.js"]
-  });
-}
-
 async function sendToContentScript(type) {
   const tab = await getCurrentTwitterTab();
-
-  try {
-    return await chrome.tabs.sendMessage(tab.id, { type });
-  } catch (error) {
-    const message = error?.message || "";
-    const isConnectionError =
-      message.includes("Receiving end does not exist") || message.includes("Could not establish connection");
-
-    if (!isConnectionError) {
-      throw error;
-    }
-
-    await injectContentScript(tab.id);
-    return chrome.tabs.sendMessage(tab.id, { type });
-  }
+  return chrome.tabs.sendMessage(tab.id, { type });
 }
 
 document.getElementById("countBtn")?.addEventListener("click", async () => {

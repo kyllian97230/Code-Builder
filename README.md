@@ -8,7 +8,6 @@ Extension Chrome (Manifest V3) pour interagir rapidement avec la page Twitter/X.
 - Copier le texte du dernier post visible.
 - Surligner les posts contenant un hashtag.
 - Détecter tous les boutons **Like** d'une publication ouverte (`/status/...`) et de ses commentaires.
-- Réinjection automatique du content script si le popup est ouvert sur un onglet déjà chargé (corrige l'erreur "Receiving end does not exist").
 - Tenter d'ouvrir les blocs de réponses masquées avant la détection (quand Twitter/X expose un bouton "voir plus").
 - Utilisation via:
   - un **popup d'extension** ;
