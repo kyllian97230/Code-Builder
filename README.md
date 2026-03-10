@@ -8,6 +8,15 @@ Extension Chrome (Manifest V3) orientée détection et déclenchement des bouton
 - Déclencher les boutons Like détectés **un par un** automatiquement.
 - Tenter d'ouvrir les blocs de réponses masquées avant la détection (quand Twitter/X expose un bouton "voir plus").
 - Réinjection automatique du content script si le popup est ouvert sur un onglet déjà chargé (corrige l'erreur "Receiving end does not exist").
+Extension Chrome (Manifest V3) pour interagir rapidement avec la page Twitter/X.
+
+## Fonctionnalités
+
+- Compter les posts visibles dans le fil.
+- Copier le texte du dernier post visible.
+- Surligner les posts contenant un hashtag.
+- Détecter tous les boutons **Like** d'une publication ouverte (`/status/...`) et de ses commentaires.
+- Tenter d'ouvrir les blocs de réponses masquées avant la détection (quand Twitter/X expose un bouton "voir plus").
 - Utilisation via:
   - un **popup d'extension** ;
   - un **panneau flottant directement sur Twitter/X**.
@@ -26,6 +35,7 @@ Extension Chrome (Manifest V3) orientée détection et déclenchement des bouton
 3. Clique l'icône de l'extension.
 4. Clique **Détecter les Like du post + commentaires**.
 5. Clique **Déclencher tous les Like détectés (1 par 1)** pour lancer les clics.
+4. Utilise les boutons du popup, ou le panneau flottant en bas à droite de la page.
 
 ## Limite importante
 

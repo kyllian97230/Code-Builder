@@ -52,6 +52,37 @@ async function sendToContentScript(type) {
     return chrome.tabs.sendMessage(tab.id, { type });
   }
 }
+async function sendToContentScript(type) {
+  const tab = await getCurrentTwitterTab();
+  return chrome.tabs.sendMessage(tab.id, { type });
+}
+
+document.getElementById("countBtn")?.addEventListener("click", async () => {
+  try {
+    const response = await sendToContentScript("TPH_COUNT");
+    setResult(`${response?.count ?? 0} post(s) visible(s).`);
+  } catch (error) {
+    setResult(error.message);
+  }
+});
+
+document.getElementById("copyBtn")?.addEventListener("click", async () => {
+  try {
+    await sendToContentScript("TPH_COPY");
+    setResult("Dernier post copié (si permission autorisée).");
+  } catch (error) {
+    setResult(error.message);
+  }
+});
+
+document.getElementById("highlightBtn")?.addEventListener("click", async () => {
+  try {
+    await sendToContentScript("TPH_HIGHLIGHT");
+    setResult("Posts avec hashtags surlignés.");
+  } catch (error) {
+    setResult(error.message);
+  }
+});
 
 document.getElementById("detectLikesBtn")?.addEventListener("click", async () => {
   try {
